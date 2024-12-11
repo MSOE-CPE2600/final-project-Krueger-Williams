@@ -34,7 +34,6 @@ int main() {
         perror("signal"); exit(1); 
     }
 
-    int sock = 0;
     struct sockaddr_in serv_addr;
     struct hostent *host_entry;
 
@@ -100,7 +99,11 @@ void* readingThread(void* sock_ptr) {
             }
             break;
         }
-        printf("Received from proxy: %s\n", buffer);
+        printf("\r%s\n", buffer);
+        fflush(stdout);
+        printf("\nEnter a message: ");
+        fflush(stdout);
+        
     }
     return NULL;
 }
@@ -143,6 +146,16 @@ void* writingThread(void* sock_ptr) {
             temp[len - 1] = '\0';
         }
 
+        // Calculate the maximum space available for the message
+        size_t prefix_len = strlen(username) + strlen(PREFIX);
+        size_t max_message_len = BUFFER_SIZE - prefix_len - 1; // -1 for the null terminator
+
+        // Truncate the message if it's too long
+        if (strlen(temp) > max_message_len) {
+            printf("Message is too long, truncating...\n");
+            temp[max_message_len] = '\0';  // Truncate temp if necessary
+        }
+
         // Add the username and prefix to the start of the buffer
         snprintf(buffer, BUFFER_SIZE, "%s%s%s", username, PREFIX, temp);
 
@@ -151,8 +164,10 @@ void* writingThread(void* sock_ptr) {
             perror("send failed");
             break;
         }
+
         memset(buffer, 0, BUFFER_SIZE);
         memset(temp, 0, BUFFER_SIZE);
     }
     return NULL;
 }
+
