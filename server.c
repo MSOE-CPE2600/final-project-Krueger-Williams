@@ -21,6 +21,7 @@ void* writingThread(void* sock);
 void handle_sigint() {
     close(sock);
     printf("\nProgram Ended.\n");
+    exit(0); // Close program
 }
 
 int main() {
@@ -92,7 +93,11 @@ void* readingThread(void* sock_ptr) {
             }
             break;
         }
-        printf("Received from proxy: %s\n", buffer);
+        printf("\r%s\n", buffer);
+        fflush(stdout);
+        printf("\nEnter a message: ");
+        fflush(stdout);
+        
     }
     return NULL;
 }
