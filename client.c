@@ -4,15 +4,32 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <pthread.h>
+#include <signal.h>
+#include <unistd.h>
 
 #define BUFFER_SIZE 1024
 #define HOSTNAME "turners.maccancode.com"  // Address of the Node.js proxy
 #define PORT 9090  // Port of the Node.js proxy
 
+static int sock = 0; // Global Socket
+
+void* readingThread(void* sock);
+void* writingThread(void* sock);
+
+void handle_sigint() {
+    close(sock);
+    printf("\nProgram Ended.\n");
+}
+
 int main() {
+
+    if (signal(SIGINT, handle_sigint) == SIG_ERR) { 
+        perror("signal"); exit(1); 
+    }
+
     int sock = 0;
     struct sockaddr_in serv_addr;
-    char buffer[BUFFER_SIZE] = {0};
     struct hostent *host_entry;
 
     // Get the server address
@@ -38,14 +55,64 @@ int main() {
 
     printf("Connected to the server\n");
 
-    while (1) {
-        printf("Enter message: ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-        send(sock, buffer, strlen(buffer), 0);
-        memset(buffer, 0, BUFFER_SIZE);
-        int valread = read(sock, buffer, BUFFER_SIZE);
-        printf("Server: %s\n", buffer);
+    // Kickoff Threads
+    pthread_t read_thread;
+    pthread_t write_thread;
+    
+    int result = pthread_create(&read_thread, NULL, readingThread, &sock);
+    if (result != 0) {
+        printf("Unable to create read thread\n");
+        return -1;
     }
 
+    result = pthread_create(&write_thread, NULL, writingThread, &sock);
+    if (result != 0) {
+        printf("Unable to create write thread\n");
+        return -1;
+    }
+    
+    // Wait for threads to complete
+    pthread_join(read_thread, NULL);
+    pthread_join(write_thread, NULL);
+    
+    close(sock);
     return 0;
+}
+
+void* readingThread(void* sock_ptr) {
+    int sock = *((int*)sock_ptr);
+    char buffer[BUFFER_SIZE] = {0};
+    while (1) {
+        memset(buffer, 0, BUFFER_SIZE);
+        // Receive a message from the proxy server
+        int valread = read(sock, buffer, BUFFER_SIZE);
+        if (valread <= 0) {
+            if (valread == 0) {
+                printf("Connection closed by proxy server\n");
+            } else {
+                perror("read failed");
+            }
+            break;
+        }
+        printf("Received from proxy: %s\n", buffer);
+    }
+    return NULL;
+}
+
+void* writingThread(void* sock_ptr) {
+    int sock = *((int*)sock_ptr);
+    char buffer[BUFFER_SIZE] = {0};
+    while (1) {
+        // Get user input or any data to send
+        printf("Enter message: ");
+        fgets(buffer, BUFFER_SIZE, stdin);
+        
+        // Send a message to the proxy server
+        if (send(sock, buffer, strlen(buffer), 0) == -1) {
+            perror("send failed");
+            break;
+        }
+        memset(buffer, 0, BUFFER_SIZE);
+    }
+    return NULL;
 }
