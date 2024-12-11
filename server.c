@@ -6,16 +6,27 @@
 #include <netdb.h>
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h>
+#include <unistd.h>
 
 #define BUFFER_SIZE 1024
 #define PROXY_HOST "maccancode.com"  // Replace with your proxy server's IP address
 #define PROXY_PORT 9091  // Port for server connections
 
+static int sock = 0; // Global Socket
+
 void* readingThread(void* sock);
 void* writingThread(void* sock);
 
+void handle_sigint() {
+    close(sock);
+    printf("\nProgram Ended.\n");
+}
+
 int main() {
-    int sock = 0;
+    if (signal(SIGINT, handle_sigint) == SIG_ERR) { 
+        perror("signal"); exit(1); 
+    }
     struct sockaddr_in serv_addr;
     struct hostent *host_entry;
 
