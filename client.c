@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #define BUFFER_SIZE 1024
 #define HOSTNAME "turners.maccancode.com"  // Address of the Node.js proxy
@@ -99,37 +100,13 @@ void* readingThread(void* sock_ptr) {
             }
             break;
         }
-        printf("\r%s\n", buffer);
-        fflush(stdout);
-        printf("\nEnter a message: ");
+        printf("\r\033[K%s\nEnter a message: ", buffer);
         fflush(stdout);
         
     }
     return NULL;
 }
-
-/*void* writingThread(void* sock_ptr) {
-    int sock = *((int*)sock_ptr);
-    char buffer[BUFFER_SIZE] = {0};
-    
-    while (1) {
-        // Get user input or any data to send
-        printf("Enter message: ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-
-        // Add the prefix to the start of the buffer 
-        snprintf(buffer, BUFFER_SIZE, "%s%s", username, PREFIX);
-        
-        // Send a message to the proxy server
-        if (send(sock, buffer, strlen(buffer), 0) == -1) {
-            perror("send failed");
-            break;
-        }
-        memset(buffer, 0, BUFFER_SIZE);
-    }
-    return NULL;
-}*/
-
+/*
 void* writingThread(void* sock_ptr) {
     int sock = *((int*)sock_ptr);
     char buffer[BUFFER_SIZE] = {0};
@@ -170,4 +147,43 @@ void* writingThread(void* sock_ptr) {
     }
     return NULL;
 }
+*/
+void* writingThread(void* sock_ptr) {
+    int sock = *((int*)sock_ptr);
+    char buffer[BUFFER_SIZE] = {0};
+    char temp[BUFFER_SIZE] = {0};  // Temporary buffer to hold user input
 
+    bool isFirstLoop = true; // Check if first loop
+
+    while (1) {
+        // Get user input or any data to send
+        // Get user input or any data to send
+        if (isFirstLoop) {
+            isFirstLoop = false;
+        } else {
+            printf("Enter message: "); // Prevent from printed twice on first loop
+        }
+        fflush(stdout);
+        fgets(temp, BUFFER_SIZE, stdin);
+        
+        // Remove the newline character at the end of temp
+        size_t len = strlen(temp);
+        if (len > 0 && temp[len - 1] == '\n') {
+            temp[len - 1] = '\0';
+        }
+
+        // Add the username and prefix to the start of the buffer
+        snprintf(buffer, BUFFER_SIZE, "%s%s%s", username, PREFIX, temp);
+
+        // Send a message to the proxy server
+        if (send(sock, buffer, strlen(buffer), 0) == -1) {
+            perror("send failed");
+            break;
+        }
+
+        memset(buffer, 0, BUFFER_SIZE);
+        memset(temp, 0, BUFFER_SIZE);
+    }
+
+    return NULL;
+}
