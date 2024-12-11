@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #define PREFIX ": "
 #define BUFFER_SIZE 1024
@@ -112,9 +113,15 @@ void* writingThread(void* sock_ptr) {
     char buffer[BUFFER_SIZE] = {0};
     char temp[BUFFER_SIZE] = {0};  // Temporary buffer to hold user input
 
+    bool isFirstLoop = true; // Check if first loop
+
     while (1) {
         // Get user input or any data to send
-        printf("Enter message: ");
+        if (isFirstLoop) {
+            isFirstLoop = false;
+        } else {
+            printf("Enter message: "); // Prevent from printed twice on first loop
+        }
         fflush(stdout);
         fgets(temp, BUFFER_SIZE, stdin);
         
