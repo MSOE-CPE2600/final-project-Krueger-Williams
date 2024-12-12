@@ -10,19 +10,18 @@
 #include <stdbool.h>
 
 #define BUFFER_SIZE 1024
-#define HOSTNAME "turners.maccancode.com"  // Address of the Node.js proxy
+#define HOSTNAME "maccancode.com"  // Address of the Node.js proxy
 #define PORT 9090  // Port of the Node.js proxy
-#define PREFIX ": "
 
 static int sock = 0; // Global Socket
-static char username[100]; //Global Username
+static char username[100]; // Global Username
 
 void* readingThread(void* sock);
 void* writingThread(void* sock);
 
 void handle_sigint() {
     close(sock);
-    printf("\nProgram Ended.\n");
+    printf("\nChat Exited.\n");
     exit(0);
 }
 
@@ -157,7 +156,6 @@ void* writingThread(void* sock_ptr) {
 
     while (1) {
         // Get user input or any data to send
-        // Get user input or any data to send
         if (isFirstLoop) {
             isFirstLoop = false;
         } else {
@@ -172,8 +170,10 @@ void* writingThread(void* sock_ptr) {
             temp[len - 1] = '\0';
         }
 
-        // Add the username and prefix to the start of the buffer
-        snprintf(buffer, BUFFER_SIZE, "%s%s%s", username, PREFIX, temp);
+        // Add the username with a colon to front of message
+        strncpy(buffer, username, BUFFER_SIZE); 
+        strncat(buffer, ": ", BUFFER_SIZE - strlen(buffer) - 1); 
+        strncat(buffer, temp, BUFFER_SIZE - strlen(buffer) - 1);
 
         // Send a message to the proxy server
         if (send(sock, buffer, strlen(buffer), 0) == -1) {
