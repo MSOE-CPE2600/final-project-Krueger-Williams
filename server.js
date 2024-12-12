@@ -1,4 +1,13 @@
-//New multiclient based on server.c
+/********************************************************************
+ *  Filename: server.js
+ *  Class: CPE 2600 121
+ *  Assignment Name: Lab 13 - Chat Application
+ *  Description: Creates a proxy server for NodeJS forwarding TCP 
+ *      connections between clients and servers
+ *  Author: Krueger 'Mac' Williams & Chance Mason
+ *  Date:  12/11/2024
+ *  Note: run with: node server.js
+ *******************************************************************/
 
 const net = require('net');
 
@@ -23,11 +32,13 @@ const proxyServer = net.createServer((socket) => {
         }
     });
 
+    // Handle socket disconnect
     socket.on('end', () => {
         console.log('Client disconnected');
         clients = clients.filter(client => client !== socket);
     });
 
+    // Handle socket error
     socket.on('error', (err) => {
         console.error('Socket error:', err.message);
     });
@@ -43,6 +54,7 @@ const serverListener = net.createServer((socket) => {
     serverSocket = socket;
     console.log('Server connected');
 
+    // Socket received data
     socket.on('data', (data) => {
         console.log(`Data received from server: ${data.toString()}`);
         // Broadcast data to all clients
@@ -51,11 +63,13 @@ const serverListener = net.createServer((socket) => {
         });
     });
 
+    // Socket disconnected
     socket.on('end', () => {
         console.log('Server disconnected');
         serverSocket = null;
     });
 
+    // Socket error
     socket.on('error', (err) => {
         console.error('Server socket error:', err.message);
     });
