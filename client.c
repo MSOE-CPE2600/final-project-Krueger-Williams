@@ -120,8 +120,12 @@ void* writingThread(void* sock_ptr) {
         } else {
             printf("Enter message: "); // Prevent from printed twice on first loop
         }
-        fflush(stdout);
+        
+        // Get user message
         fgets(temp, BUFFER_SIZE, stdin);
+        
+        // Move terminal cursor up a line to overwrite the enter message prompt
+        printf("\r\033[AO");
         
         // Remove the newline character at the end of temp
         size_t len = strlen(temp);
@@ -140,6 +144,7 @@ void* writingThread(void* sock_ptr) {
             break;
         }
 
+        // Empty message and temporary buffers
         memset(buffer, 0, BUFFER_SIZE);
         memset(temp, 0, BUFFER_SIZE);
     }
