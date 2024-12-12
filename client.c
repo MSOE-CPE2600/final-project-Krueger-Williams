@@ -28,7 +28,11 @@ void handle_sigint() {
 int main() {
 
     printf("Please Enter a Username: \n");
-    scanf("%s", username);
+    fgets(username, 100, stdin);
+    size_t len = strlen(username); 
+    if (len > 0 && username[len - 1] == '\n') { 
+        username[len - 1] = '\0'; 
+    }
 
     if (signal(SIGINT, handle_sigint) == SIG_ERR) { 
         perror("signal"); exit(1); 
@@ -111,16 +115,10 @@ void* writingThread(void* sock_ptr) {
     char buffer[BUFFER_SIZE] = {0};
     char temp[BUFFER_SIZE] = {0};  // Temporary buffer to hold user input
 
-    bool isFirstLoop = true; // Check if first loop
-
     while (1) {
         // Get user input or any data to send
-        if (isFirstLoop) {
-            isFirstLoop = false;
-        } else {
-            printf("Enter message: "); // Prevent from printed twice on first loop
-        }
         
+        printf("Enter message: ");
         // Get user message
         fgets(temp, BUFFER_SIZE, stdin);
         
