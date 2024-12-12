@@ -105,48 +105,7 @@ void* readingThread(void* sock_ptr) {
     }
     return NULL;
 }
-/*
-void* writingThread(void* sock_ptr) {
-    int sock = *((int*)sock_ptr);
-    char buffer[BUFFER_SIZE] = {0};
-    char temp[BUFFER_SIZE] = {0};  // Temporary buffer to hold user input
 
-    while (1) {
-        // Get user input or any data to send
-        printf("Enter message: ");
-        fgets(temp, BUFFER_SIZE, stdin);
-
-        // Remove the newline character at the end of temp
-        size_t len = strlen(temp);
-        if (len > 0 && temp[len - 1] == '\n') {
-            temp[len - 1] = '\0';
-        }
-
-        // Calculate the maximum space available for the message
-        size_t prefix_len = strlen(username) + strlen(PREFIX);
-        size_t max_message_len = BUFFER_SIZE - prefix_len - 1; // -1 for the null terminator
-
-        // Truncate the message if it's too long
-        if (strlen(temp) > max_message_len) {
-            printf("Message is too long, truncating...\n");
-            temp[max_message_len] = '\0';  // Truncate temp if necessary
-        }
-
-        // Add the username and prefix to the start of the buffer
-        snprintf(buffer, BUFFER_SIZE, "%s%s%s", username, PREFIX, temp);
-
-        // Send a message to the proxy server
-        if (send(sock, buffer, strlen(buffer), 0) == -1) {
-            perror("send failed");
-            break;
-        }
-
-        memset(buffer, 0, BUFFER_SIZE);
-        memset(temp, 0, BUFFER_SIZE);
-    }
-    return NULL;
-}
-*/
 void* writingThread(void* sock_ptr) {
     int sock = *((int*)sock_ptr);
     char buffer[BUFFER_SIZE] = {0};
