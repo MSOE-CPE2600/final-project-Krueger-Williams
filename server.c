@@ -9,7 +9,7 @@
 #include <signal.h>
 #include <stdbool.h>
 
-#define PREFIX ": "
+
 #define BUFFER_SIZE 1024
 #define PROXY_HOST "maccancode.com"  // Replace with your proxy server's IP address
 #define PROXY_PORT 9091  // Port for server connections
@@ -22,7 +22,7 @@ void* writingThread(void* sock);
 
 void handle_sigint(int sig) {
     close(sock);
-    printf("\nProgram Ended.\n");
+    printf("\nChat Exited.\n");
     exit(0); // Close program
 }
 
@@ -131,8 +131,10 @@ void* writingThread(void* sock_ptr) {
             temp[len - 1] = '\0';
         }
 
-        // Add the username and prefix to the start of the buffer
-        snprintf(buffer, BUFFER_SIZE, "%s%s%s", username, PREFIX, temp);
+        // Add the username with a colon to front of message
+        strncpy(buffer, username, BUFFER_SIZE); 
+        strncat(buffer, ": ", BUFFER_SIZE - strlen(buffer) - 1); 
+        strncat(buffer, temp, BUFFER_SIZE - strlen(buffer) - 1);
 
         // Send a message to the proxy server
         if (send(sock, buffer, strlen(buffer), 0) == -1) {
